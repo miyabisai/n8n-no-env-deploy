@@ -1,17 +1,17 @@
-#!/bin/bash
-set -e;
+#!/usr/bin/env bash
+# 確保在任何錯誤、未設定變數或管道失敗時立即退出
+set -euo pipefail
+
+if [ -n "${POSTGRES_NON_ROOT_USER:-}" ] && [ -n "${POSTGRES_NON_ROOT_PASSWORD:-}" ]; then
+	psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+		CREATE USER ${POSTGRES_NON_ROOT_USER} WITH PASSWORD '${POSTGRES_NON_ROOT_PASSWORD}';
+		GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB} TO ${POSTGRES_NON_ROOT_USER};
+		GRANT CREATE ON SCHEMA public TO ${POSTGRES_NON_ROOT_USER};
+	EOSQL
+
+	echo "SETUP INFO: Non-root user created: ${POSTGRES_NON_ROOT_USER}"
+else
+	echo "SETUP INFO: POSTGRES_NON_ROOT_USER or POSTGRES_NON_ROOT_PASSWORD not found. Skipping user creation."
+fi
 
 
-
-
-
-
-# if [ -n "${POSTGRES_NON_ROOT_USER:-}" ] && [ -n "${POSTGRES_NON_ROOT_PASSWORD:-}" ]; then
-# 	psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-# 		CREATE USER ${POSTGRES_NON_ROOT_USER} WITH PASSWORD '${POSTGRES_NON_ROOT_PASSWORD}';
-# 		GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB} TO ${POSTGRES_NON_ROOT_USER};
-# 		GRANT CREATE ON SCHEMA public TO ${POSTGRES_NON_ROOT_USER};
-# 	EOSQL
-# else
-# 	echo "SETUP INFO: No Environment variables given!"
-# fi
