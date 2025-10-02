@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD_FILE: /secrets/postgres_password.txt
       POSTGRES_NON_ROOT_USER_FILE: /secrets/postgres_non_root_user2.txt
       POSTGRES_NON_ROOT_PASSWORD_FILE: /secrets/postgres_non_root_password.txt
-      POSTGRES_DB: n8n
+      POSTGRES_DB: ${DB_TYPE}
     depends_on:
       secrets-fetcher:
         condition: service_completed_successfully # 確保密鑰檔案存在
@@ -42,26 +42,20 @@ services:
   n8n:
     image: docker.n8n.io/n8nio/n8n
     restart: always
-    # ❌ 移除不安全的 .env 檔案引用
     env_file:
       - .env 
     environment:
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
       TZ: ${TZ}
-      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: ${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
       DB_TYPE: ${DB_TYPE}
       DB_POSTGRESDB_HOST: ${DB_POSTGRESDB_HOST}
       DB_POSTGRESDB_PORT: ${DB_POSTGRESDB_PORT}
       DB_POSTGRESDB_DATABASE: ${DB_POSTGRESDB_DATABASE}
-      # ⚠️ 修正：直接讀取共享 Volume 內的密鑰檔案
       DB_POSTGRESDB_USER_FILE: /secrets/postgres_non_root_user2.txt 
       DB_POSTGRESDB_PASSWORD_FILE: /secrets/postgres_non_root_password.txt
-      # 🔑 任何其他的敏感資訊（如加密金鑰）也應該從 Volume 讀取檔案
-      # N8N_BASIC_AUTH_PASSWORD_FILE: /secrets/n8n_auth_password.txt
+
     ports:
       - 5678:5678
-    links:
-      - postgres
     volumes:
       - n8n_storage:/home/node/.n8n
       - secrets_data:/secrets:ro # ⬅️ 必須掛載共享 Volume，並建議設定為只讀
